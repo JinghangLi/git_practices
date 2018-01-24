@@ -375,7 +375,7 @@ sudo udevadm control –reload
 ```
 ls /dev
 ```
-可查看设备号，如下图所示：
+可查看设备号，如下图所示：  
 ![](picture/8.2.png)
 
 3. 修改小车底盘 ROS 驱动节点 LAUNCH 文件,将通信设备指定为上文设置的TTYUSB001路径`Documents/ros/src/xqserial_server/`
