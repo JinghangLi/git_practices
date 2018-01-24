@@ -24,14 +24,14 @@ sudo apt-get install ssh screen
 4. 添加远程目录  
 因为后续需要经常操作更改小强主机上的文件,现在我们将小强主机远程目录添加到本地遥控端,这样在本地就可以直接图形化操作小强主机上的文件(小强主机相当于本地Ubuntu 系统的外挂硬盘)  
 点击下图位置,添加小强远程目录
-![](1.png)
+![](picture/1.1.png)
 输入小强远程目录,请将 ip 换成上文提到的实际 ip 地址 `192.168.1.101`
-![](2.png)
+![](picture/1.2.png)
 根据提示输入小强主机用户名和密码  
 一切正常的话,已经打开了小强主机的 home 目录,为了未来使用方便,可以将这个地址添加到 bookmark
-![](3.png)
+![](picture/1.3.png)
 下次直接点击这个 bookmark,就能访问小强主机的 home 目录
-![](4.png)
+![](picture/1.4.png)
 
 5. 配置完成,开始使用   
 
@@ -74,7 +74,7 @@ cd ..
 3. 修改软件包中 LAUNCH 文件夹内的 STARTUP.LAUNCH 文件  
 利用上篇教程安装的 atom 编辑器,在本地遥控端直接编辑这个文件(需要远程
 访问小强的主机文件目录,请参考上篇基础操作教程进行配置)
-![](5.png)
+![](picture/2.1.png)
 在上图箭头区域,添加或删除你需要启动的 ROS launch 文件及 ROS node,这些项目在下文将被添加进小强主机的开机启动项里,小强下次开机会自动运行这些项目。最后保存退出
 4. 将 STARTUP.LAUNCH 文件在小强主机中注册为 STARTUP 开机启动服务  
 接着二中的 ssh 窗口输入  
@@ -102,7 +102,7 @@ c.查看 startup 服务状态
 sudo service startup status
 ```
 正常的话会显示 startup start/running 如下图所示
-![](6.png)
+![](picture/2.2.png)
 d.还可以进一步查看相关的 topic 是否已经发布出来
 ```
 rostopic list
@@ -117,16 +117,16 @@ roscore
 ```
 roslaunch xiaoqiang_udrf display.launch
 ```
-![](3.1.png)
-![](3.2.png)
+![](picture/3.1.png)
+![](picture/3.2.png)
 此时发现没有任何显示,需要添加 rviz 显示项目
-![](3.3.png)
-![](3.4.png)
+![](picture/3.3.png)
+![](picture/3.4.png)
 还是有问题,整个模型透明发白,这是因为 rivz 中的全局坐标系“fixed frame”设置的不合适,将 map 改成 base_link 后即可正常显示
-![](3.5.png)
+![](picture/3.5.png)
 现在操作右上角的滑动条就可以使相应的轮子转动。
 修改 xiaoqiang_udrf 文件夹内的 display.launch 文件 ,false 改 true
-![](3.6.png)
+![](picture/3.6.png)
 
 ## 四.惯性导航自主移动测试
 接下来开始测试小强的惯性导航功能。这里的惯性导航,是指利用小强自身佩戴的惯性传感器(加速度和陀螺仪)和底盘编码器信息进行定位和移动。需要的 ROS 软件包有:1.底层驱动 xqserial_server, 2.机器人模型包 xiaoqiang_udrf, 3.惯性导航测试软件包 nav_test.
@@ -143,7 +143,7 @@ ssh -X xiaoqiang@192.168.xxx.xxx
 rosrun tf view_frames evince frames.pdf
 ```
 正常会显示下图
-![](4.1.png)
+![](picture/4.1.png)
 2. 在本地遥控端上完成的操作  
 本地遥控端必须是安装好 ROS jade 版本的 ubuntu 系统,同时保证和小强主机在同一个局域网内。因为需要在本地窗口用 rviz 显示
 小强姿态和路径轨迹(ssh 中不能直接打开 rviz),  所以需要使用 ros 的分布式网络配置方案。  
@@ -191,14 +191,14 @@ rviz
 当窗口打开后,点击左上角的 file->open,选择小强里的  
 ``/home/xiaoqiang/Documents/ros/src/nav_test/config/nav.rviz 文件。``  
 这时界面应该如下图显示,关于如何访问小强主机上的文件,请参考之前的教程。
-![](4.2.png)
+![](picture/4.2.png)
 3. 在小强主机远程 ssh 窗口内完成最后操作  **(ssh登录小强命令终端)**
 ```
 rosrun nav_test square.py
 ```
 演示结果如下图所示  
 
-![](4.3.png)
+![](picture/4.3.png)
 
 ## 五.kinect1 代 ROS 驱动测试与安装
 1. LIBFREENECT 测试
@@ -207,7 +207,7 @@ rosrun nav_test square.py
 freenect-glview
 ```
 可以看到如下图的类似界面
-![](5.1.png)  
+![](picture/5.1.png)  
 2. ROS 驱动测试  
 关闭步骤 1 中的程序,新开一个命令窗口,使用 freenect_launch 启动相关 kinect 节点  
 ```
@@ -219,12 +219,11 @@ freenect-xyz.launch
 rviz
 ```
 选择需要显示的内容,例如 kinect 的 rgb 图像和深度点云,显示效果如下
-![](5.2.png)
+![](picture/5.2.png)
 
 kienct 各项功能的开启在  
 `/home/xiaoqiang/Documents/ros/src/freenect_stack/freenect_launch/launch/examples/freenect -xyz.launch` 里
-
-![](5.3.png)
+![](picture/5.3.png)
 
 通过设置 true 或者 false 来开启、关闭相应功能
 
@@ -244,8 +243,7 @@ roslaunch freenect_launch freenect-xyz.launch
 ```
 正常启动会出现下图,如果出现红色错误(驱动缺陷),请 ctrl+c 关闭命令后等待 6 秒(真的
 需要 6 秒),再次尝试允许上面的 roslaunch 命令。
-
-![](6.1.png)
+![](picture/6.1.png)
 
 2. 在本地虚拟机新开一个窗口,发布电机角度控制命令  
 ssh 登入小车主机
@@ -270,8 +268,7 @@ A. 配置本地虚拟机
 sudo gedit /etc/hosts
 ```
 将下图中的 ip 地址换成小车实际数值
-
-![](7.1.png)
+![](picture/7.1.png)
 
 B. 配置小车主机
 局域网 ssh 登入小车主机
@@ -280,13 +277,12 @@ ssh -X xiaoqiang@192.168.1.101
 sudo gedit /etc/hosts
 ```
 将下图中的 ip 地址换成本地虚拟机实际数值,主机名称改为虚拟机名称
-
-![](7.2.png)
+![](picture/7.2.png)
 
 2. 在本地虚拟机中新开 3 个窗口,分别 ssh 登入小车,启动原理部分提及的相关软件包
 
 A. SSH 登入 **(三个窗口均为SSH登录小强的命令终端)**
-![](7.3.png)
+![](picture/7.3.png)
 ```
 命令均为；
 ssh -X xiaoqiang@192.168.1.101 (与截图中的不一致)
@@ -302,16 +298,14 @@ rostopic pub /set_tilt_degree std_msgs/Int16 '{data: -19}' -r 1
 D. 编辑底盘导航程序配置文件  
 `/HOME/XIAOQIANG/DOCUMENTS/ROS/SRC/NAV_TEST/CONFIG/FAKE/BASE_LOCAL_PLANNER_P
 ARAMS2.YAML` ,使能 KINECT
-
-![](7.4.png)
+![](picture/7.4.png)
 
 E. 在第三个窗口启动底盘导航程序
 ```
 roslaunch nav_test fake_move_base_blank_map.launch
 ```
 F. 全部正常,会出现类似下图的界面,到此小车端配置启动完成
-
-![](7.5.png)
+![](picture/7.5.png)
 
 3. 在本地虚拟机中新开 1 个窗口,用来启动 rviz  
 
@@ -320,29 +314,83 @@ A 加入 ROS 局域网后,打开 RVIZ **(本地的命令终端)**
 export ROS_MASTER_URI=http://xiaoqiang-desktop:11311
 rviz
 ```
-
-![](7.6.png)
+![](picture/7.6.png)
 
 B. 点击 RVIZ 界面左上角的 OPEN CONFIG ,选择小车主机上的
 `/HOME/XIAOQIANG/DOCUMENTS/ROS/SRC/NAV_TEST/CONFIG/NAV_ADDWA_KINECT.RVIZ` 配置
 文件
-
-![](7.7.png)
+![](picture/7.7.png)
 
 C. 正常的话,现在 RVIZ 中将出现类似下图的画面,现在所有配置都已经完成,开始发布导航目标点
-
-![](7.8.png)
+![](picture/7.8.png)
 
 D. 发布一个目标点,小车会开始自主移动
-
-![](7.9.png)
+![](picture/7.9.png)
 
 E. 小车到达目标点,请继续尝试其它位置
+![](picture/7.10.png)
 
-![](7.10.png)
+## 八. rplidar 二代激光雷达的使用暨利用 udev 给小车增加串口设备
 
-## 八. kinect 跟随包 turtlebot_follower
+小车主机和底盘的通信是通过串口实现的,在实际开发过程中我们可能会给小车增加串口外设,这会导致串口号(TTYUSB)的混乱,引发小车底盘 ROS 驱动和串口设备的异常。下文将以 RPLIDAR 二代激光雷达为例,演示通过修改 UDEV 文件指定设备串口号的方式解决串口
+冲突问题。 [***方法依据***](http://wirespeed.xs4all.nl/mediawiki/index.php/Udev_rules_file_for_Arduino_boards)
 
-**TURTLEBOT_FOLLOWER 利用深度摄像头反馈的点云图,计算一定区域内的点云中
-心坐标作为目标跟随点,根据这个坐标和设置的安全距离控制底盘移动实现跟
-随功能。**
+1. 查看各个串口设备的 ID
+```
+sudo apt-get install expect-dev
+unbuffer udevadm monitor --environment | grep 'ID_SERIAL='
+```
+将底盘通信u转串重新插拔一下,终端会打印出此设备的ID信息,例如下
+图:  
+`Prolific_Technology_Inc._USB-Serial_Controller"`  
+再将激光雷达的 usb 适配器重新插入主机,终端也会打印出激光雷达的ID信息,例如下图:
+`"Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001"`
+![](picture/8.1.png)
+
+2.根据获取的串口设备的 ID,建立 UDEV 规则文件,将底盘通信U转串指定为TTYUSB001,将激光雷达指定为 TTYUSB002
+```
+sudo gedit /etc/udev/rules.d/ 60 -persistent-serial.rules
+```
+输入下面内容后保存,请将文中 ID_SERIAL 后面的字符串换成步骤1中获取的 ID
+将`60-persistent-serial.rules`中的内容修改成如下所示 [***udev方法出处***](http://wirespeed.xs4all.nl/mediawiki/index.php/Udev_rules_file_for_Arduino_boards)
+```
+ACTION!= "add" ,
+GOTO = "persistent_serial_end"
+SUBSYSTEM!= "tty" ,
+GOTO = "persistent_serial_end"
+KERNEL!= "ttyUSB[0-9]*" ,
+GOTO = "persistent_serial_end"
+# This is old 11.10 style: IMPORT="usb_id --export %p"
+IMPORT{builtin}= "path_id"
+ENV{ID_SERIAL}== "Prolific_Technology_Inc._USB-Serial_Controller", SYMLINK= "stm32Car", SYMLINK+="ttyUSB001" , OWNER= "xiaoqiang"
+ENV{ID_SERIAL}== "Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001" , SYMLINK= "rplidarA2", SYMLINK+= "ttyUSB002" , OWNER= "xiaoqiang"
+LABEL= "persistent_serial_end"
+```
+更新系统 udev 规则
+```
+sudo udevadm control –reload
+```
+重新插拔所有 usb 串口设备,现在底盘通信u转串成功被识别为 ttyUSB001、激光雷达被识别
+为 ttyUSB002,与设备插入顺序和端口无关。
+```
+ls /dev
+```
+可查看设备号，如下图所示：
+![](picture/8.2.png)
+
+3. 修改小车底盘 ROS 驱动节点 LAUNCH 文件,将通信设备指定为上文设置的TTYUSB001路径`Documents/ros/src/xqserial_server/`
+4. 修改 RPLIDAR 二代激光的 ROS 驱动节点 LAUNCH 文件,将通信设备指定为上文设置的 TTYUSB002  
+![](picture/8.3.png)
+
+*激光雷达驱动的安装*  
+```
+cd ~/Documents/ros/src
+git clone https://github.com/BlueWhaleRobot/rplidar_ros.git
+cd ..
+catkin_make
+```
+5. 重启小车,现在已经可以同时正常使用激光雷达和小车底盘,例如运行下述命令测试激光雷达
+```
+roslaunch rplidar_ros view_rplidar.launch
+```
+![](picture/8.4.png)
