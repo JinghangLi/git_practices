@@ -393,4 +393,330 @@ catkin_make
 ```
 roslaunch rplidar_ros view_rplidar.launch
 ```
-![](picture/8.4.png)
+![](picture/8.
+
+## 九. 在 gmapping 下使用激光雷达 rplidar a2 进行建图
+
+1. 启动 GMAPPING 节点
+确保雷达安装正确,ssh 进入小强主机后启动 gmapping 中的 launch 文件
+```
+ssh -X xiaoqiang@192.168.1.101
+roslaunch gmapping slam_gmapping_xiaoqiang_rplidar_a2.launch
+```
+本地虚拟机打开 rviz,选择打开小强 ros 工作目录下的
+`slam_gmapping/gmapping/launch/rplidar_a2_test.rviz` 配置文件
+![](picture/9.1.png)
+```
+export ROS_MASTER_URI=http: //xiaoqiang-desktop:11311
+rviz
+```
+![](picture/9.2.png)
+
+3、遥控小强运动开始建图
+第一种方式,使用 windows 遥控端, **参考小强用户手册教程(6)**  
+第二种方式,使用键盘遥控
+```
+ssh xiaoqiang@192.168.1.101
+rosrun nav_test control.py
+```
+第三种方式,使用安卓手机 app, **参考小强用户手册教程(5)**  
+被建图环境与生成的地图如下图所示
+![](picture/9.5.jpg)
+![](picture/9.3.png)
+4. 保存地图
+ssh 登录小强,在小强 home 目录下保存为 work0 开头的文件
+```
+ssh xiaoqiang@192.168.1.101
+rosrun map_server map_saver -f work0
+```
+![](picture/9.4.png)
+
+## 十. AMCL 导航测试
+下文将演示 AMCL 导航操作,使用 rplidar a2 作为 scan 输入, 教程 九 中建立的地图文件作为全局 map  
+一. 准备工作  
+先安装升级 nav_test、laser_filters 软件包  
+1. SSH 登入小强主机,进入小强 ROS 工作空间
+```
+ssh xiaoqiang@192.168.1.101
+cd Documents/ros/src/
+```
+2. 更新升级软件包
+```
+rm -rf
+laser_filters
+git clone https://github.com/BlueWhaleRobot/laser_filters.git
+cd nav_ test
+git stash
+git pull
+cd ..
+cd ..
+catkin_make
+```
+3. 更新小强 HOSTS 文件和本地虚拟机的 HOSTS 文件,使小强和本地虚拟机可以相互通信,参考教程 八 中的 1.A 和 1.B 部分  
+
+二. 启动导航节点
+```
+roslaunch nav_test xiaoqiang_a2_demo_amcl.launch
+```
+正常会出现下图的类似结果,同时雷达开始旋转
+![](picture/10.1.png)
+
+三. 打开操作客户端  
+1. 在本地虚拟中启动 RVIZ,选择打开小强 ROS 工作目录下的  
+`NAV_TEST/CONFIG/XIAOQIANG_AMCL.RVIZ` 配置文件
+```
+export ROS_MASTER_URI=http: //xiaoqiang-desktop:11311
+rviz
+```
+![](picture/10.3.png)
+
+2. 等待几秒后,RVIZ 正常会出现类似下图的界面
+![](picture/10.4.png)
+
+四. 开始导航测试
+1. 在 RVIZ 中使用 2D POSE ESTIMATION 设置机器人的初始 POSE 在 MAP 中的位置因为 AMCL 算法需要一个较为精确的初始值,才能进一步由当前雷达扫描点阵匹配出机器人在 MAP 中的真实位置。
+![](picture/10.5.png)
+
+2. 在 RVIZ 中使用 2D NAV GOAL 给小强发布目标点
+![](picture/10.6.png)
+
+3. 小强开始自主移动到指定位置
+![](picture/10.7.png)
+
+## 十一. 大范围激光雷达 slam 与实时回路闭合测试
+借助谷歌的 CARTOGRAPHER 配合 SLAMTEC 的激光雷达,我们可以尝试对大型建筑建立平面图。  
+**本教程操作思路 : 原教程考虑到 WIFI 网络覆盖是一个问题,所以借助蓝牙手柄来遥控小车运动。因为我在做这个教程的时候没有蓝牙手柄，因此我采用的是使用 SSH 通过 WiFi 遥控小车运动，期间通过 ROSBAG 录制激光雷达数据,最后重放BAG 建图。**  
+注:以下所有操作在小车主机 UBUNTU 上完成  
+### 操作步骤:
+1. 新开一个窗口启动 rplidar
+```
+roslaunch rplidar_ros rplidar.launch
+```
+2. 新开两个窗口启动 ps3 手柄遥控程序,按手柄连接键连上小车 **(如果你有蓝牙手柄的话)**  
+第一个窗口  
+```
+sudo bash
+rosrun ps3joy ps3joyfake_node.py
+```
+第二个窗口
+```
+roslaunch turtlebot_teleop ps3fakexiaoqiang_teleop.launch
+```
+3. 新开一个窗口启动 rosbag 录制进程,开始录制激光雷达数据/scan
+```
+rosbag record /scan
+```
+4. 用手柄遥控小车运动,绕建图区域一圈,也可以多圈
+5. bag 录制完成,关闭上文的1、2、3窗口  
+新录制的点bag文件在小强 home 目录下,将其重命名为1.bag
+6. 启动 cartographer_ros 开始 bag 回放建图
+```
+roslaunch cartographer_ros demo_xiaoqiang_rplidar_2d.launch bag_filename:=/home/xiaoqiang/1.bag
+```
+7. 一切正常的话,现在可以看到下图的类似效果,等待 bag 包 play 完
+![](picture/11.1.png)
+
+8. 保存地图
+```
+rosservice call /finish_trajectory "stem: 'rplidar_test'"
+```
+## 十二. 利用 ORB_SLAM2 建立环境三维模型
+想要实现视觉导航,空间的三维模型是必须的。ORB_SLAM 就是一个非常有效的建立空间模型的算法。这个算法基于 ORB 特征点的识别，具有准确度高,运行效率高的特点。我们在原有算法的基础上进行了修改,增加了地图的保存和载入功能,使其更加适用于实际的应用场景。下面就介绍一下具体的使用方法。  
+**准备工作**  
+在启动 ORB_SLAM2 之前,请先确认小强的摄像头工作正常。  
+ORB_SLAM2 建图过程中需要移动小车,移动小车过程中 ORB_SLAM2 的运行状态不方便显示(ssh 方式比较卡顿,也不可能拖着显示器),因此请先安装好 **[小强图传遥控 windows 客户端]**(见小强ROS机器人用户手册)。  
+1. 启动 ORB_SLAM2
+更改配置文件  
+ORB_SLAM2 的配置文件位于  
+`/home/xiaoqiang/Documents/ros/workspace/src/ORB_SLAM2/Examples/ROS/orb_slam2/Data`   
+文件夹内。更改 setting.yaml 其中的 LoadMap 的值,将其设置为 0。当设置为 1 的时候程序会在启动后自动从/home/xiaoqiang/slamdb 文件夹内载入地图数据。当设置成 0 时,就不会载入地图数据。由于我们是要创建地图,所以LoadMap 要设置为 0。
+![](picture/12.1.png)
+
+ssh 方式进入小强,执行以下指令
+```
+ssh -X xiaoqiang@192.168.1.101
+roslaunch orb_slam2 start.launch
+```
+![](picture/12.2.png)
+
+2. 开始建立环境三维模型
+打开小强图传遥控 windows 客户端,点击“未连接“按钮连接小强。在图传窗口右键打开”原始图像“和”ORB_SLAM2 的特征点图像“
+![](picture/12.3.jpg)
+
+上图中,左侧图像是摄像头原始彩色图像,右侧是 ORB_SLAM2 处理后的黑白图像。当前 ORB_SLAM2 还没有初始化成功,所以黑白图像没有特征点。按住”w”键开始遥控小强往前缓慢移动,使 ORB_SLAM2 初始化成功,即黑白图像开始出现红绿色特征点现在就可以开始遥控小强对周围环境建图,遥控过程中需要保证黑白图像一直存在红绿色特征点,不存在则说明视觉 lost 了,需要遥控小强退回到上次没 lost
+的地方找回视觉位置。
+3. 使用 rviz 查看建图效果  
+在本地虚拟机 hosts 中添加小强 ip 地址,然后新开一个终端打开 rviz  
+```
+export ROS_MASTER_URI=http: //xiaoqiang-desktop:11311
+rviz
+```
+打开`/home/xiaoqiang/Documents/ros/src/ORB_SLAM/Data/rivz.rviz` 配置文件
+![](picture/12.4.png)
+
+如下图所示,红黑色点是建立的三维模型(稀疏特征点云),蓝色方框是 keyframe可以表示小强轨迹
+![](picture/12.5.png)
+
+4. 保存地图
+当地图建立的范围满足自己要求后,在虚拟机新开一个命令窗口,输入下列命令保存地图
+```
+ssh -X xiaoqiang@192.168.1.101
+rostopic pub /map_save std_msgs/Bool '{data: true}' -r 0.1
+```
+这个命令每隔 10s 触发 1 次保存任务,因此当看到下图时,请关闭上面的窗口  
+在虚拟机新开一个命令窗口,输入下列命令侦测地图保存命令有没有发出
+```
+ssh -X xiaoqiang@192.168.1.101
+rostopic echo /map_save
+```
+![](picture/12.6.png)  
+
+地图文件会被保存进用户主目录的 slamdb 文件夹内。
+
+## 十三. 利用 DSO_SLAM 建立环境三维模型
+Direct Sparse Odometry(DSO)是业内很流行的 lsd_slam 系统作者的学生 Jakob Engel 开发的,实
+测性能和精度优于 lsd_slam。 DSO 上个月被作者开源到 github,同时还一并开源了 DSO 在 ros系统下的使用代码实例 dso_ros.  
+本篇教程将演示如何在小强开发平台上安装 DSO 和 dso_ros, 利用小强平台上的摄像头实
+时运行 DSO 进行三维建模, 先上教程的最后测试视频(效果很不错)。
+![](picture/13.1.png)
+
+1. DSO 的安装  
+注:因为小强开发平台已经提前安装好了不少 DSO 需要的依赖包,下文将跳过这些包的安装,请其它开发平台的读者参考 github 上的完整安装教程进行安装。
+***另 : 以下的安装和配置过程我已在该ROS机器人上配置过了，请直接跳到步骤3开始使用DSO_SLAM***  
+
+A. 安装依赖包
+```
+sudo apt-get install libsuitesparse-dev libeigen3-dev libboost-dev
+sudo apt- get install libopencv-dev
+```
+B. 下载源代码
+```
+cd ~/Documents/
+git clone https: //github.com/JakobEngel/dso.git
+```
+C. 继续配置依赖包
+```
+sudo apt-get install zlib1g-dev
+cd ~/Documents/dso/thirdparty
+tar -zxvf libzip -1.1.1 .tar.gz
+cd libzip -1.1.1 /
+./configure
+make
+sudo make install
+sudo cp lib/zipconf.h /usr/ local / include /zipconf.h
+```
+D. 编译安装
+```
+cd ~/Documents/dso/
+mkdir build
+cd build
+cmake ..
+make -j
+```
+2. dso_ros 的安装
+
+注:原作者提供的源代码有两个分支,master 分支对应 rosbuild 版,catkin 分支对应 catkin
+版。对于现代 ROS 版本,推荐使用 catkin 版本,安装使用更方便。但是作者的 catkin 分支存
+在代码缺陷,实际无法安装使用,因此下文将安装我们蓝鲸智能修改之后的 dso_ros 版本。
+```
+cd ~/Documents/ros/src
+git clone https://github.com/BlueWhaleRobot/dso_ros.git
+cd ..
+export DSO_PATH=/home/xiaoqiang/Documents/dso
+catkin_make
+```
+3. 开始使用  
+注:小强开发平台的摄像头标定文件是相同的,因此可以直接运行下列命令,请其它开发平
+台的读者自行修改 camera.txt 文件中的内容(留意每行的最后结尾不能有空格)以及命令中
+的 image topic 名字
+```
+rosrun dso_ros dso_live image:=/camera_node/image_raw calib=/home/xiaoqiang/Documents/ros/src/dso_ros/camera.txt mode=1
+```
+现在移动摄像头,就能开始对周围环境进行三维建模,移动过程避免急转弯和剧烈运动。
+请先遥控小强运动同时用 rosbag 录制`/camera_node/image_raw` 这个 image topic
+数据,然后重放,这样可以实现大范围的建模。命令如下
+```
+rosbag record /camera_node/image_raw
+```
+rosbag 重放前,需要关闭 usb 摄像头节点
+```
+sudo service startup stop
+```
+否则会有图像发布冲突。下图为运行状态演示
+![](picture/13.2.png)
+![](picture/13.3.png)
+
+## 十四. NLlinepatrol_planner 的简单使用
+随小车主机附带的 NLlinepatrol_planner 是一个用于视觉导航的全局路径规划器,根据小车输出的视觉轨迹(视觉轨迹文件的获得请参考当前栏目下的帖子),能输出一条连接小车当前坐标和目的坐标的全局路径,下文将通过一个模拟实例来演示它的使用方式。主要思路是:一个 python 脚本发布虚拟的视觉里程计和相关 tf 树,一个 python 脚本给 move_base 节点发布目标点,最后 move_base 节点通过调用 NLlinepatrol_planner 获得一条全局路径并在 rviz 中显示。
+1. 配置 NLlinepatrol_planner
+需要提供 NLlinepatrol_planner 待读取的 **视觉导航路径文件**、轨迹坐标变换需要的变换参数文件,这两文件都应该放在 NLlinepatrol_planner 下面的 data 文件夹内,文件名任意,通过配置 move_base 中的相关参数可以指定 NLlinepatrol_planner 读取的文件,下文会说明。
+![](picture/14.1.png)
+在上图中,NAV1.CSV 是视觉轨迹文件、TFSETTINGS.TXT 为变换参数文件(第一行是旋转矩阵
+的 9 个元素、数组元素排列顺序为 C 语言的行排列,第二行为平移向量的 XYZ 分量,第三行
+为 SCALE 因子)
+2. 制作 move_base 的 launch 文件  
+对于本教程,我们已经在 nav_test 软件包中的 launch 文件夹内提供了相关的 luanch 文
+件,名字为 `xq_move_base_blank_map2.launch`,这个 luanch 文件在实际运用时可以作为模板,
+需要注意的地方请看下图
+![](picture/14.2.png)
+这个 luanch 文件会调用 `xq_move_base2.launch` 文件,`xq_move_base2.launch` 文件也在当前
+目录下,里面的内容如下
+```
+<launch>
+<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+<param name="base_global_planner" value="NLlinepatrol_planner/NLlinepatrolPlanner"/>
+<rosparam file="$(find nav_test)/config/NLlinepatrol/costmap_common_params.yaml" command="load" ns="global_costmap" />
+<rosparam file="$(find nav_test)/config/NLlinepatrol/costmap_common_params.yaml" command="load" ns="local_costmap" />
+<rosparam file="$(find nav_test)/config/NLlinepatrol/local_costmap_params.yaml" command="load" />
+<rosparam file="$(find nav_test)/config/NLlinepatrol/global_costmap_params.yaml" command="load" />
+<rosparam file="$(find nav_test)/config/NLlinepatrol/base_local_planner_params.yaml" command="load" />
+<rosparam file="$(find nav_test)/config/NLlinepatrol/base_global_planner_params.yaml" command="load" />
+</node>
+</launch>
+```
+通过上述内容,可以发现通过设置 `BASE_GLOBAL_PLANNER` 参数值来制定全局路径规划
+器为 `NLLINEPATROL_PLANNER`,还可以看出 MOVE_BASE 的其它参数配置文件放在 NAV_TEST
+软件包内的 `config/NLlinepatrol` 路径内
+![](picture/14.3.png)
+对于上图,我们需要更改的文件是 `BASE_GLOBAL_PLANNER_PARAMS.YAML`,因为这个文件
+里的内容对应 `NLLINEPATROL_PLANNER` 运行时实际加载的参数,默认内容如下
+```
+NLlinepatrolPlanner:
+DumpFileName: AnnDump.sav
+strTFParsFile: TFSettings.txt
+TxtFileName: nav1.csv
+ANN_Dump_Bool: false
+connect_distance: 0.3
+```
+`TXTFILENAME` 指定加载的视觉轨迹文件名,`STRTFPARSFILE` 指定加载的变换参数文件名,
+`CONNECT_DISTANCE` 设置视觉轨迹文件中连通点之间的最大距离(坐标变换后两个点之间的
+距离小于该值就认为这两点之间没有障碍物,可以直接连接), `ANN_DUMP_BOOL` 值为 `FALSE`
+表示从 TXT 文件中加载轨迹和变换参数、如果为 `TRUE` 则从 `DUMPFILENAME` 参数指定的 `DUMP`
+文件加载(多次使用同一个视觉轨迹文件时,第二次以后从 DUMP 文件启动可以加速)
+3. 配置完成开始使用  
+A. 因为我们这次是虚拟运行,发布的一些 topic 是没有实际意义的但是和小强默认 ROS 驱动
+冲突,所以现在需要停止所有 ROS 运行实例
+```
+sudo service startup stop
+roscore
+```
+B. 启动虚拟 topic 和小强模型文件
+ ```
+rosrun orb_init temp.py //发布 odom
+roslaunch xiaoqiang_udrf xiaoqiang_udrf.launch //启动模型
+```
+C. 启动上文制作的 `xq_move_base_blank_map2.launch` 文件
+```
+roslaunch nav_test xq_move_base_blank_map2.launch
+```
+D. 启动 rviz,并打开 `ros/src/nav_test/config/nav_xq2.rviz` 配置文件
+```
+rviz
+```
+E. 启动虚拟 goal 发布节点(基于惯性导航中的 squre.py 修改而来)
+```
+rosrun nav_test NLlinepatrol.py
+```
+4. 现在 rviz 中就已经出现目标全局路径轨迹了(绿线),想测试其它 goal 目标
+点,请自行修改 `NLlinepatrol.py` 中相关代码
+![](picture/14.4.png)
