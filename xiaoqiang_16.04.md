@@ -527,7 +527,14 @@ $ rostopic echo /map_save
 件夹内的 `setting.yaml` 文件中的 `LoadMap` 的值设置为 1
 
 ### 教程18 利用 DSO_SLAM 建立环境三维模型
+
 1. 直接运行(已安装dso)
 ```
 $ rosrun dso_ros dso_live image: = /camera_node/image _raw calib= /home/xiaoqiang/Documents/ros/src/dso _ros/camera.txt mode= 1
 ```
+效果如下图所示
+![](picture/18.1.png)
+
+### 教程19 [NLlinepatrol_planner的简单使用](http://community.bwbot.org/topic/87/%E5%B0%8F%E5%BC%BAros%E6%9C%BA%E5%99%A8%E4%BA%BA%E6%95%99%E7%A8%8B-19-___nllinepatrol_planner%E7%9A%84%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8)
+
+### 教程20 [获取小车视觉里程计并在rviz中显示小车轨迹](http://community.bwbot.org/topic/20/%E5%B0%8F%E5%BC%BAros%E6%9C%BA%E5%99%A8%E4%BA%BA%E6%95%99%E7%A8%8B-20-___%E8%8E%B7%E5%8F%96%E5%B0%8F%E8%BD%A6%E8%A7%86%E8%A7%89%E9%87%8C%E7%A8%8B%E8%AE%A1%E5%B9%B6%E5%9C%A8rviz%E4%B8%AD%E6%98%BE%E7%A4%BA%E5%B0%8F%E8%BD%A6%E8%BD%A8%E8%BF%B9)
